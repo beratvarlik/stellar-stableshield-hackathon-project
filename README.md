@@ -167,3 +167,7 @@ T61 - Berat Varlık, Mustafa Baha Faik
 Lisans
 
 Bu proje hackathon kapsamında geliştirilmiş bir prototiptir.
+
+## SLIDE
+[2026_09 Pro Hackathon Presentation Template.pptx](https://github.com/user-attachments/files/32431291/2026_09.Pro.Hackathon.Presentation.Template.pptx)
+
