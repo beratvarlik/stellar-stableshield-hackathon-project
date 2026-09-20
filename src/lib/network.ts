@@ -1,20 +1,31 @@
 // Single source of truth for which Stellar network this app talks to.
 //
 // StableShield has no real, KYC'd mainnet anchor partner yet, so wallet
-// connect, balance reads (Horizon) and the SEP-24 deposit flow (anchor:
-// testanchor.stellar.org, see sep24.ts) all run on TESTNET. Keeping them on
-// the same network is what makes a completed test deposit actually show up
-// in the balance shown on the dashboard.
+// connect, balance reads (Horizon) and the SEP-24 deposit flow (anchor: see
+// ANCHOR_DOMAIN in sep24.ts) default to TESTNET. Keeping them on the same
+// network is what makes a completed test deposit actually show up in the
+// balance shown on the dashboard.
 //
-// To go live on mainnet: point HORIZON_URL at https://horizon.stellar.org,
-// swap USDC_ISSUER for Circle's mainnet issuer
-// (GA5ZSEJYB37JRC5AVCIA5MOP4RHTM335X2KGX3IHOJAPP5RE34K4KZVN), set
-// NETWORK_PASSPHRASE to the mainnet passphrase, and point sep24.ts's
-// ANCHOR_DOMAIN at a real mainnet anchor.
+// All three values below are overridable via Vite env vars (e.g. Vercel
+// project settings) without touching code:
+//   VITE_HORIZON_URL        → Horizon endpoint for balance reads
+//   VITE_NETWORK_PASSPHRASE → the network passphrase Horizon/the anchor use
+//   VITE_ANCHOR_URL         → the anchor's domain or SEP-24 URL (see sep24.ts)
+//
+// USDC_ISSUER is NOT env-configurable: it must match whichever anchor mints
+// the USDC (VITE_ANCHOR_URL) — if you point at a different anchor, update
+// this constant to that anchor's own USDC issuer (check its stellar.toml).
 
-export const NETWORK_LABEL = "Testnet";
-export const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
-export const HORIZON_URL = "https://horizon-testnet.stellar.org";
+function readEnv(key: string, fallback: string): string {
+  const value = import.meta.env[key];
+  return typeof value === "string" && value.trim() !== "" ? value.trim() : fallback;
+}
+
+export const NETWORK_PASSPHRASE = readEnv("VITE_NETWORK_PASSPHRASE", "Test SDF Network ; September 2015");
+export const HORIZON_URL = readEnv("VITE_HORIZON_URL", "https://horizon-testnet.stellar.org");
+
+const MAINNET_PASSPHRASE = "Public Global Stellar Network ; September 2015";
+export const NETWORK_LABEL = NETWORK_PASSPHRASE === MAINNET_PASSPHRASE ? "Mainnet" : "Testnet";
 
 // The USDC trustline issued by testanchor.stellar.org on testnet (confirmed
 // against its stellar.toml) — this is the asset a completed deposit through

@@ -1,15 +1,35 @@
 import { StellarWalletsKit } from "./stellarWalletsKit";
 import { translations, type Language } from "../i18n/translations";
 
-// The anchor to use for the SEP-24 interactive deposit flow. StableShield has
-// no real anchor partner (yet), so this defaults to Stellar's own official
-// reference anchor — a real, live SEP-24 server that lets the whole flow
-// (SEP-10 auth, interactive widget, status polling) be exercised end to end.
-// It runs on TESTNET, matching ./network.ts, so a completed deposit's USDC
-// DOES show up in the balance read there. Swap both for mainnet equivalents
-// (this domain for a real, KYC'd anchor; ./network.ts for mainnet Horizon +
-// Circle's mainnet USDC issuer) once a production anchor is integrated.
-export const ANCHOR_DOMAIN = "testanchor.stellar.org";
+/**
+ * Accepts a bare domain ("testanchor.stellar.org") or a full URL
+ * ("https://testanchor.stellar.org/sep24") and reduces it to just the host —
+ * SEP-1 TOML discovery (resolveAnchor below) needs a domain, not an endpoint
+ * path, but VITE_ANCHOR_URL may reasonably be set to either.
+ */
+function extractAnchorDomain(raw: string): string {
+  try {
+    return new URL(raw.includes("://") ? raw : `https://${raw}`).host;
+  } catch {
+    return raw;
+  }
+}
+
+// The anchor to use for the SEP-24 interactive deposit flow, overridable via
+// the VITE_ANCHOR_URL env var (e.g. Vercel project settings). StableShield
+// has no real anchor partner (yet), so this defaults to Stellar's own
+// official reference anchor — a real, live SEP-24 server that lets the whole
+// flow (SEP-10 auth, interactive widget, status polling) be exercised end to
+// end. It runs on TESTNET, matching ./network.ts, so a completed deposit's
+// USDC DOES show up in the balance read there. Swap both for mainnet
+// equivalents (this domain for a real, KYC'd anchor; ./network.ts for
+// mainnet Horizon + Circle's mainnet USDC issuer) once a production anchor
+// is integrated.
+const rawAnchorEnv = import.meta.env.VITE_ANCHOR_URL;
+export const ANCHOR_DOMAIN =
+  typeof rawAnchorEnv === "string" && rawAnchorEnv.trim() !== ""
+    ? extractAnchorDomain(rawAnchorEnv.trim())
+    : "testanchor.stellar.org";
 export const DEPOSIT_ASSET_CODE = "USDC";
 
 export type Sep24Status =
